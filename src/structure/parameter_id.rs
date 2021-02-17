@@ -1,6 +1,7 @@
 use speedy::{Readable, Writable};
+use std::mem::size_of;
 
-#[derive(Debug, PartialEq, Readable, Writable)]
+#[derive(Clone, Copy, Debug, PartialEq, Readable, Writable)]
 pub struct ParameterId {
     value: u16,
 }
@@ -58,6 +59,10 @@ impl ParameterId {
     pub const PID_ENTITY_NAME: ParameterId = ParameterId { value: 0x0062 };
     pub const PID_KEY_HASH: ParameterId = ParameterId { value: 0x0070 };
     pub const PID_STATUS_INFO: ParameterId = ParameterId { value: 0x0071 };
+
+    pub fn serialized_length() -> usize {
+        size_of::<Self>()
+    }
 }
 
 #[cfg(test)]

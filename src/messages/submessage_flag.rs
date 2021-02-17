@@ -1,4 +1,4 @@
-use speedy::{Endianness, Readable, Writable};
+use speedy::{Context, Endianness, Readable, Writable};
 
 /// Identifies the endianness used to encapsulate the Submessage, the
 /// presence of optional elements with in the Submessage, and possibly
@@ -7,14 +7,14 @@ use speedy::{Endianness, Readable, Writable};
 /// endianness used to encapsulate the Submessage. The remaining
 /// flags are interpreted differently depending on the kind
 /// of Submessage and are described separately for each Submessage.
-#[derive(Debug, PartialOrd, PartialEq, Ord, Eq, Readable, Writable)]
+#[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Ord, Eq, Readable, Writable)]
 pub struct SubmessageFlag {
     pub flags: u8,
 }
 
 impl SubmessageFlag {
     /// Indicates endianness
-    pub fn endianness_flag(&self) -> speedy::Endianness {
+    pub fn endianness_flag(&self) -> Endianness {
         if self.is_flag_set(0x01) {
             Endianness::LittleEndian
         } else {
@@ -30,6 +30,14 @@ impl SubmessageFlag {
     }
     pub fn is_flag_set(&self, mask: u8) -> bool {
         self.flags & mask != 0
+    }
+}
+
+impl Context for SubmessageFlag {
+    type Error = speedy::Error;
+
+    fn endianness(&self) -> Endianness {
+        self.endianness_flag()
     }
 }
 

@@ -1,6 +1,7 @@
 pub mod ack_nack;
 pub mod data;
 pub mod data_frag;
+pub mod data_submessage_flags;
 pub mod fragment_number;
 pub mod fragment_number_set;
 pub mod gap;

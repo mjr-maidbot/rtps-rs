@@ -18,5 +18,5 @@ mod behavior;
 mod common;
 mod dds;
 mod discovery;
-mod messages;
-mod structure;
+pub mod messages;
+pub mod structure;

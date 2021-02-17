@@ -18,5 +18,6 @@ pub mod participant;
 pub mod reliability_kind;
 pub mod sequence_number;
 pub mod sequence_number_set;
+pub mod size_tracking_context;
 pub mod time;
 pub mod topic_kind;

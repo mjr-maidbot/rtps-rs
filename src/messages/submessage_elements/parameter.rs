@@ -1,4 +1,5 @@
 use crate::structure::parameter_id::ParameterId;
+use crate::structure::size_tracking_context::SizeTrackingContext;
 use speedy::{Context, Readable, Reader, Writable, Writer};
 
 #[derive(Debug, PartialEq)]
@@ -10,11 +11,32 @@ pub struct Parameter {
     value: Vec<u8>,
 }
 
-impl<'a, C: Context> Readable<'a, C> for Parameter {
+impl Parameter {
+    pub fn new_sentinel() -> Parameter {
+        Parameter {
+            parameter_id: ParameterId::PID_SENTINEL,
+            value: vec![0; 2],
+        }
+    }
+
+    pub fn get_id(&self) -> ParameterId {
+        self.parameter_id
+    }
+
+    pub fn is_sentinel(&self) -> bool {
+        self.parameter_id == ParameterId::PID_SENTINEL
+    }
+}
+
+impl<'a, C: SizeTrackingContext> Readable<'a, C> for Parameter {
     #[inline]
     fn read_from<R: Reader<'a, C>>(reader: &mut R) -> Result<Self, C::Error> {
         let parameter_id: ParameterId = reader.read_value()?;
+        reader.context_mut().subtract_from_remaining(ParameterId::serialized_length());
+
         let length = reader.read_u16()?;
+        reader.context_mut().subtract_from_remaining(2);
+
         let alignment = length % 4;
 
         let mut value = Vec::with_capacity((length + alignment) as usize);
@@ -23,16 +45,12 @@ impl<'a, C: Context> Readable<'a, C> for Parameter {
             let byte = reader.read_u8()?;
             value.push(byte);
         }
+        reader.context_mut().subtract_from_remaining((length + alignment) as usize);
 
         Ok(Parameter {
-            parameter_id: parameter_id,
-            value: value,
+            parameter_id,
+            value,
         })
-    }
-
-    #[inline]
-    fn minimum_bytes_needed() -> usize {
-        8
     }
 }
 

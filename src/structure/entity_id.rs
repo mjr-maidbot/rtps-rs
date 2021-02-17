@@ -1,4 +1,5 @@
 use speedy::{Context, Readable, Reader, Writable, Writer};
+use std::mem::size_of;
 
 #[derive(Copy, Clone, Debug, PartialOrd, PartialEq, Ord, Eq)]
 pub struct EntityId_t {
@@ -72,6 +73,11 @@ impl<'a, C: Context> Readable<'a, C> for EntityId_t {
             entity_key,
             entity_kind,
         })
+    }
+
+    #[inline]
+    fn minimum_bytes_needed() -> usize {
+        size_of::<Self>()
     }
 }
 

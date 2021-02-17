@@ -1,4 +1,5 @@
 use crate::common::validity_trait::Validity;
+use crate::messages::data::{Data, DataContext};
 use crate::messages::heartbeat::Heartbeat;
 use crate::messages::heartbeat_frag::HeartbeatFrag;
 use crate::messages::info_destination::InfoDestination;
@@ -73,13 +74,12 @@ impl MessageReceiver {
             state: DeserializationState::ReadingHeader,
         }
     }
-}
 
-impl Decoder for MessageReceiver {
-    type Item = EntitySubmessage;
-    type Error = std::io::Error;
-
-    fn decode(&mut self, bytes: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
+    fn decode_one(
+        &mut self,
+        bytes: &mut BytesMut
+    ) -> Result<Option<<MessageReceiver as Decoder>::Item>, <MessageReceiver as Decoder>::Error>
+    {
         let validate_header = |header: Header| {
             if header.valid() {
                 Ok(header)
@@ -89,7 +89,7 @@ impl Decoder for MessageReceiver {
         };
 
         match self.state {
-            DeserializationState::ReadingHeader => Header::read_from_buffer_owned_with_ctx(
+            DeserializationState::ReadingHeader => Header::read_from_buffer_with_ctx(
                 Endianness::NATIVE,
                 &bytes.split_to(<Header as Readable<Endianness>>::minimum_bytes_needed()),
             )
@@ -111,7 +111,7 @@ impl Decoder for MessageReceiver {
             }),
 
             DeserializationState::ReadingSubmessage => {
-                SubmessageHeader::read_from_buffer_owned_with_ctx(
+                SubmessageHeader::read_from_buffer_with_ctx(
                     Endianness::NATIVE,
                     &bytes.split_to(
                         <SubmessageHeader as Readable<Endianness>>::minimum_bytes_needed(),
@@ -129,8 +129,8 @@ impl Decoder for MessageReceiver {
                 })
                 .and_then(|submessage_header| match submessage_header.submessage_id {
                     SubmessageKind::ACKNACK => {
-                        let ack_nack = AckNack::read_from_buffer_owned_with_ctx(
-                            submessage_header.flags.endianness_flag(),
+                        let ack_nack = AckNack::read_from_buffer_with_ctx(
+                            submessage_header.flags,
                             &bytes.split_to(submessage_header.submessage_length.into()),
                         )?;
                         Ok(Some(EntitySubmessage::AckNack(
@@ -139,29 +139,40 @@ impl Decoder for MessageReceiver {
                         )))
                     }
                     SubmessageKind::DATA => {
-                        unimplemented!();
+                        let data_context = DataContext::new(
+                            submessage_header.flags,
+                            submessage_header.submessage_length as usize,
+                        );
+                        let data = Data::read_from_buffer_with_ctx(
+                            data_context,
+                            &bytes.split_to(submessage_header.submessage_length.into()),
+                        )?;
+                        Ok(Some(EntitySubmessage::Data(
+                            data,
+                            submessage_header.flags,
+                        )))
                     }
                     SubmessageKind::DATA_FRAG => {
                         unimplemented!();
                     }
                     SubmessageKind::GAP => {
-                        let gap = Gap::read_from_buffer_owned_with_ctx(
-                            submessage_header.flags.endianness_flag(),
+                        let gap = Gap::read_from_buffer_with_ctx(
+                            submessage_header.flags,
                             &bytes.split_to(submessage_header.submessage_length.into()),
                         )?;
                         Ok(Some(EntitySubmessage::Gap(gap)))
                     }
                     SubmessageKind::NACK_FRAG => {
-                        let nack_frag = NackFrag::read_from_buffer_owned_with_ctx(
-                            submessage_header.flags.endianness_flag(),
+                        let nack_frag = NackFrag::read_from_buffer_with_ctx(
+                            submessage_header.flags,
                             &bytes.split_to(submessage_header.submessage_length.into()),
                         )?;
 
                         Ok(Some(EntitySubmessage::NackFrag(nack_frag)))
                     }
                     SubmessageKind::HEARTBEAT => {
-                        let heartbeat = Heartbeat::read_from_buffer_owned_with_ctx(
-                            submessage_header.flags.endianness_flag(),
+                        let heartbeat = Heartbeat::read_from_buffer_with_ctx(
+                            submessage_header.flags,
                             &bytes.split_to(submessage_header.submessage_length.into()),
                         )?;
 
@@ -171,16 +182,16 @@ impl Decoder for MessageReceiver {
                         )))
                     }
                     SubmessageKind::HEARTBEAT_FRAG => {
-                        let heartbeat_frag = HeartbeatFrag::read_from_buffer_owned_with_ctx(
-                            submessage_header.flags.endianness_flag(),
+                        let heartbeat_frag = HeartbeatFrag::read_from_buffer_with_ctx(
+                            submessage_header.flags,
                             &bytes.split_to(submessage_header.submessage_length.into()),
                         )?;
 
                         Ok(Some(EntitySubmessage::HeartbeatFrag(heartbeat_frag)))
                     }
                     SubmessageKind::INFO_SRC => {
-                        let info_src = InfoSource::read_from_buffer_owned_with_ctx(
-                            submessage_header.flags.endianness_flag(),
+                        let info_src = InfoSource::read_from_buffer_with_ctx(
+                            submessage_header.flags,
                             &bytes.split_to(submessage_header.submessage_length.into()),
                         )?;
                         self.receiver.source_guid_prefix = info_src.guid_prefix;
@@ -194,8 +205,8 @@ impl Decoder for MessageReceiver {
                         Ok(None)
                     }
                     SubmessageKind::INFO_DST => {
-                        let info_dst = InfoDestination::read_from_buffer_owned_with_ctx(
-                            submessage_header.flags.endianness_flag(),
+                        let info_dst = InfoDestination::read_from_buffer_with_ctx(
+                            submessage_header.flags,
                             &bytes.split_to(submessage_header.submessage_length.into()),
                         )?;
 
@@ -209,7 +220,7 @@ impl Decoder for MessageReceiver {
                         let mut bytes = bytes.split_to(submessage_header.submessage_length.into());
                         let (unicast_locator_list, read_bytes) =
                             LocatorList_t::read_with_length_from_buffer_with_ctx(
-                                submessage_header.flags.endianness_flag(),
+                                submessage_header.flags,
                                 &bytes,
                             );
                         self.receiver.unicast_reply_locator_list = unicast_locator_list?;
@@ -221,7 +232,7 @@ impl Decoder for MessageReceiver {
                             if submessage_header.flags.is_flag_set(0x02) {
                                 let (multicast_locator_list, read_bytes) =
                                     LocatorList_t::read_with_length_from_buffer_with_ctx(
-                                        submessage_header.flags.endianness_flag(),
+                                        submessage_header.flags,
                                         &bytes,
                                     );
                                 bytes.advance(read_bytes);
@@ -235,7 +246,7 @@ impl Decoder for MessageReceiver {
                     SubmessageKind::INFO_REPLAY_IP4 => {
                         let mut bytes = bytes.split_to(submessage_header.submessage_length.into());
                         let unicast_locator = LocatorUDPv4_t::read_from_buffer_with_ctx(
-                            submessage_header.flags.endianness_flag(),
+                            submessage_header.flags,
                             &bytes.split_to(
                                 <LocatorUDPv4_t as Readable<Endianness>>::minimum_bytes_needed(),
                             ),
@@ -245,7 +256,7 @@ impl Decoder for MessageReceiver {
                         self.receiver.multicast_reply_locator_list =
                             if submessage_header.flags.is_flag_set(0x02) {
                                 let multicast_locator = LocatorUDPv4_t::read_from_buffer_with_ctx(
-                                submessage_header.flags.endianness_flag(),
+                                submessage_header.flags,
                                 &bytes.split_to(
                                     <LocatorUDPv4_t as Readable<Endianness>>::minimum_bytes_needed(
                                     ),
@@ -260,8 +271,8 @@ impl Decoder for MessageReceiver {
                     }
                     SubmessageKind::INFO_TS => {
                         if !submessage_header.flags.is_flag_set(0x02) {
-                            let timestamp = Time_t::read_from_buffer_owned_with_ctx(
-                                submessage_header.flags.endianness_flag(),
+                            let timestamp = Time_t::read_from_buffer_with_ctx(
+                                submessage_header.flags,
                                 &bytes.split_to(submessage_header.submessage_length.into()),
                             )?;
                             self.receiver.have_timestamp = true;
@@ -286,6 +297,27 @@ impl Decoder for MessageReceiver {
                     }
                 })
                 .or_else(|err| Err(err.into()))
+            }
+        }
+    }
+}
+
+impl Decoder for MessageReceiver {
+    type Item = EntitySubmessage;
+    type Error = std::io::Error;
+
+    fn decode(&mut self, bytes: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
+        loop {
+            if bytes.is_empty() {
+                self.state = DeserializationState::ReadingHeader;
+                break Ok(None);
+            } else {
+                let result = self.decode_one(bytes);
+                if let Ok(None) = result {
+                    continue;
+                } else {
+                    break result;
+                }
             }
         }
     }
@@ -327,7 +359,7 @@ mod tests {
                         let mut _submessage_content: Vec<u8> = vec![];
                         $(
                             let serialized_submessage =
-                                $entity.write_to_vec_with_ctx(submessage_header.flags.endianness_flag()).unwrap();
+                                $entity.write_to_vec_with_ctx(submessage_header.flags).unwrap();
                             _submessage_content.extend(serialized_submessage.into_iter());
                         )*
                         let provided_submessage_length = submessage_header.submessage_length;
@@ -338,7 +370,7 @@ mod tests {
                             provided_submessage_length, calculated_submessage_length
                         );
                         submessage_header.submessage_length = calculated_submessage_length;
-                        let submessage_header = submessage_header.write_to_vec_with_ctx(submessage_header.flags.endianness_flag()).unwrap();
+                        let submessage_header = submessage_header.write_to_vec_with_ctx(submessage_header.flags).unwrap();
                         serialized_input.extend(submessage_header.into_iter());
                         serialized_input.extend(_submessage_content.into_iter());
                     )+
