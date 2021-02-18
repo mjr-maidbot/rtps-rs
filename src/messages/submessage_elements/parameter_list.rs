@@ -1,6 +1,6 @@
+use crate::common::size_tracking_context::SizeTrackingContext;
 use crate::messages::submessage_elements::parameter::Parameter;
 use crate::structure::parameter_id::ParameterId;
-use crate::structure::size_tracking_context::SizeTrackingContext;
 use speedy::{Context, Readable, Reader, Writable, Writer};
 
 /// ParameterList is used as part of several messages to encapsulate

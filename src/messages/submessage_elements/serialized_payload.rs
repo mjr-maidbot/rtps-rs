@@ -1,6 +1,6 @@
+use crate::common::size_tracking_context::SizeTrackingContext;
 use crate::messages::submessage_elements::parameter_list::ParameterList;
 use crate::messages::submessage_elements::serialized_payload_header::SerializedPayloadHeader;
-use crate::structure::size_tracking_context::SizeTrackingContext;
 use speedy::{Context, Readable, Reader, Writable, Writer};
 
 /// A SerializedPayload is either a ParameterList or user-defined data in an

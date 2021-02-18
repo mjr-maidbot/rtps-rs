@@ -1,5 +1,5 @@
+use crate::common::size_tracking_context::SizeTrackingContext;
 use crate::structure::parameter_id::ParameterId;
-use crate::structure::size_tracking_context::SizeTrackingContext;
 use speedy::{Context, Readable, Reader, Writable, Writer};
 
 #[derive(Debug, PartialEq)]

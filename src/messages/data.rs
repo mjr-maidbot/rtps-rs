@@ -1,10 +1,10 @@
+use crate::common::size_tracking_context::SizeTrackingContext;
 use crate::messages::data_submessage_flags::DataSubmessageFlags;
 use crate::messages::submessage_elements::parameter_list::ParameterList;
 use crate::messages::submessage_elements::serialized_payload::SerializedPayload;
 use crate::messages::submessage_flag::SubmessageFlag;
 use crate::structure::entity_id::EntityId_t;
 use crate::structure::sequence_number::SequenceNumber_t;
-use crate::structure::size_tracking_context::SizeTrackingContext;
 use speedy::{Context, Endianness, Readable, Reader, Writable, Writer};
 
 /// This is a speedy::Context for processing Data submessages. It contains flags
