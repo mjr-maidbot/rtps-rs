@@ -12,9 +12,9 @@ impl SubmessageKind {
     pub const GAP: SubmessageKind = SubmessageKind { value: 0x08 };
     pub const INFO_TS: SubmessageKind = SubmessageKind { value: 0x09 };
     pub const INFO_SRC: SubmessageKind = SubmessageKind { value: 0x0c };
-    pub const INFO_REPLAY_IP4: SubmessageKind = SubmessageKind { value: 0x0d };
+    pub const INFO_REPLY_IP4: SubmessageKind = SubmessageKind { value: 0x0d };
     pub const INFO_DST: SubmessageKind = SubmessageKind { value: 0x0e };
-    pub const INFO_REPLAY: SubmessageKind = SubmessageKind { value: 0x0f };
+    pub const INFO_REPLY: SubmessageKind = SubmessageKind { value: 0x0f };
     pub const NACK_FRAG: SubmessageKind = SubmessageKind { value: 0x12 };
     pub const HEARTBEAT_FRAG: SubmessageKind = SubmessageKind { value: 0x13 };
     pub const DATA: SubmessageKind = SubmessageKind { value: 0x15 };
@@ -63,8 +63,8 @@ mod tests {
         be = [0x0c]
     },
     {
-        submessage_kind_info_replay_ip4,
-        SubmessageKind::INFO_REPLAY_IP4,
+        submessage_kind_info_reply_ip4,
+        SubmessageKind::INFO_REPLY_IP4,
         le = [0x0d],
         be = [0x0d]
     },
@@ -75,8 +75,8 @@ mod tests {
         be = [0x0e]
     },
     {
-        submessage_kind_info_replay,
-        SubmessageKind::INFO_REPLAY,
+        submessage_kind_info_reply,
+        SubmessageKind::INFO_REPLY,
         le = [0x0f],
         be = [0x0f]
     },

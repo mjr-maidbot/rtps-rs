@@ -216,7 +216,7 @@ impl MessageReceiver {
 
                         Ok(None)
                     }
-                    SubmessageKind::INFO_REPLAY => {
+                    SubmessageKind::INFO_REPLY => {
                         let mut bytes = bytes.split_to(submessage_header.submessage_length.into());
                         let (unicast_locator_list, read_bytes) =
                             LocatorList_t::read_with_length_from_buffer_with_ctx(
@@ -243,7 +243,7 @@ impl MessageReceiver {
 
                         Ok(None)
                     }
-                    SubmessageKind::INFO_REPLAY_IP4 => {
+                    SubmessageKind::INFO_REPLY_IP4 => {
                         let mut bytes = bytes.split_to(submessage_header.submessage_length.into());
                         let unicast_locator = LocatorUDPv4_t::read_from_buffer_with_ctx(
                             submessage_header.flags,
@@ -560,7 +560,7 @@ mod tests {
             header = Header::new(GuidPrefix_t::GUIDPREFIX_UNKNOWN),
             [
                 submessage_header = SubmessageHeader {
-                    submessage_id: SubmessageKind::INFO_REPLAY,
+                    submessage_id: SubmessageKind::INFO_REPLY,
                     flags: SubmessageFlag { flags: 0b0000_0011 },
                     submessage_length: 80,
                 },
