@@ -15,7 +15,7 @@ mod serialization_test;
 #[macro_use]
 mod checked_impl;
 mod behavior;
-mod common;
+pub mod common;
 mod dds;
 mod discovery;
 pub mod messages;

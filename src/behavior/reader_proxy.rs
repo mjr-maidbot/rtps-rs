@@ -3,7 +3,7 @@ use crate::structure::guid::GUID_t;
 use crate::structure::sequence_number::SequenceNumber_t;
 
 /// The RTPS ReaderProxy class represents the information an RTPS StatefulWriter
-/// maintains on each matched RTPS.
+/// maintains on each matched RTPS Reader.
 pub struct ReaderProxy {
     /// Identifies the remote matched RTPS Reader that is represented by the
     /// ReaderProxy.
